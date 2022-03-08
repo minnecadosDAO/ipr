@@ -1,55 +1,54 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr};
 use cw_storage_plus::{Item, Map};
+use cosmwasm_std::Timestamp;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
-    pub count: i32,
-
-    pub reward_contract: Addr,
-    pub total_ust_deposited: i32,
-    pub total_rewards_claimed: i32,
-    pub reward_teirs: vec<RewardTeir>,
-    pub fixed_price: i32,
     pub owner: Addr,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct RewardTeir {
-    pub time: i32,
-    pub rate: i32,
+    pub protocol_wallet: Addr,
+    pub treasury_wallet: Addr,
+    pub reward_contract: Addr,
+    pub ust_deposited: u64,
+    pub sellback_price: u64,
+    pub tier0rate: f64,
+    pub tier0time: u64,
+    pub tier1rate: f64,
+    pub tier1time: u64,
+    pub tier2rate: f64,
+    pub tier2time: u64,
+    pub tier3rate: f64,
+    pub tier3time: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Entry {
-    pub owner: Addr,
-    pub claimable_reward: i32,
-    pub ust_balance: i32,
-    pub reward_rate: i32,
-    pub ust_deposit_log: vec<Deposit>,
-    pub ust_withdraw_log: vec<Withdraw>,
-    pub dynamic_reward_log: vec<Reward>,
+    pub claimable_reward: u64,
+    pub ust_deposited: u64,
+    pub averaged_reward_rate: f64,
+    pub ust_deposit_log: Vec<Deposit>,
+    pub ust_withdraw_log: Vec<Withdraw>,
+    pub dynamic_reward_log: Vec<Reward>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Deposit {
-    pub amount: i32,
+    pub amount: u64,
     pub time: Timestamp,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Withdraw {
-    pub amount: i32,
+    pub amount: u64,
     pub time: Timestamp,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Reward {
-    pub amount: i32,
+    pub amount: u64,
     pub time: Timestamp,
-    pub reward_rate: i32,
+    pub reward_tier: u8,
 }
 
 pub const STATE: Item<State> = Item::new("state");

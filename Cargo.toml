@@ -1,7 +1,7 @@
 [package]
-name = "counter"
+name = "ipr"
 version = "0.1.0"
-authors = ["Thomas Rooney <roone194@umn.edu>"]
+authors = ["Thomas Rooney"]
 edition = "2018"
 
 exclude = [
