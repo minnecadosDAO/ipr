@@ -8,6 +8,16 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
-    // Add any other custom errors you like here.
-    // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
+
+    #[error("You cannot withdraw UST when you have not deposited UST")]
+    CannotWithdrawWithoutDeposit {},
+
+    #[error("You cannot withdraw UST when your balance is zero")]
+    CannotWithdrawBalanceZero {},
+
+    #[error("You cannot withdraw an amount of UST greater than your balance")]
+    CannotWithdrawGreaterThanBalance {},
+
+    #[error("You cannot claim rewards without depositing UST")]
+    CannotClaimWithoutDeposit {},
 }
