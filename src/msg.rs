@@ -10,7 +10,8 @@ pub struct InstantiateMsg {
     pub reward_contract: Addr,
     pub ust_deposited: Uint128,
     pub sellback_price: u64,
-    pub anc_market: Addr,
+    pub anc_market: CanonicalAddr,
+    pub aust_contract: CanonicalAddr,
     pub tier0rate: f64,
     pub tier0time: u64,
     pub tier1rate: f64,
@@ -33,7 +34,7 @@ pub enum ExecuteMsg {
     SetTreasuryWallet {},
     SetRewardContract {},
     SetTierData { data: (u8, f64, u64) },
-    SetAncMarket { address: String },
+    SetAncMarket { address: CanonicalAddr },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -62,6 +63,7 @@ pub struct StateResponse {
     pub ust_deposited: Uint128,
     pub sellback_price: u64,
     pub anc_market: CanonicalAddr,
+    pub aust_contract: CanonicalAddr,
     pub tier0rate: f64,
     pub tier0time: u64,
     pub tier1rate: f64,

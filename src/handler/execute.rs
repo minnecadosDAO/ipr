@@ -6,7 +6,6 @@ use crate::{ContractError, state::{ENTRIES, STATE, Entry}};
 use cw20::Cw20ExecuteMsg;
 use terra_cosmwasm::TerraQuerier;
 
-
 pub fn try_deposit(deps: DepsMut, info: MessageInfo, env: Env, entry_address: String, amount: Uint128) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     let valid_address = deps.api.addr_validate(&entry_address)?;
@@ -48,7 +47,14 @@ pub fn try_withdraw(deps: DepsMut, info: MessageInfo, env: Env, entry_address: S
 
     if info.sender == entry_address || info.sender == state.owner {
         // swap from aust to ust
-        let withdraw = deposit_stable_msg(deps, &state.anc_market, "uust", amount);
+        let withdraw = redeem_stable_msg(deps, &state.anc_market, &state.aust_contract, amount);
+        // transfer funds from protocol to users wallet
+        let mut response: Response = Default::default();
+        let coin_amount = coins(amount.u128(), "uust");
+        response.messages = vec![SubMsg::new(BankMsg::Send {
+            to_address: entry_address.to_string(),
+            amount: coin_amount,
+        })];
         ENTRIES.update(deps.storage, &valid_address, update_entry)?;
         // TODO: remember to update state variables in all these functions
         // STATE.update(deps.storage, action)

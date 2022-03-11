@@ -11,6 +11,7 @@ pub struct State {
     pub ust_deposited: Uint128,
     pub sellback_price: u64,
     pub anc_market: CanonicalAddr,
+    pub aust_contract: CanonicalAddr,
     pub tier0rate: f64,
     pub tier0time: u64,
     pub tier1rate: f64,

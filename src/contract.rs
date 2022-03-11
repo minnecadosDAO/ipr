@@ -30,6 +30,7 @@ pub fn instantiate(
         ust_deposited: msg.ust_deposited,
         sellback_price: msg.sellback_price,
         anc_market: msg.anc_market,
+        aust_contract: msg.aust_contract,
         tier0rate: msg.tier0rate,
         tier0time: msg.tier0time,
         tier1rate: msg.tier1rate,

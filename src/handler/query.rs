@@ -24,6 +24,7 @@ pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
         ust_deposited: state.ust_deposited,
         sellback_price: state.sellback_price,
         anc_market: state.anc_market,
+        aust_contract: state.aust_contract,
         tier0rate: state.tier0rate,
         tier0time: state.tier0time,
         tier1rate: state.tier1rate,
