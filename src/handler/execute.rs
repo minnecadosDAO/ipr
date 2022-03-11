@@ -3,6 +3,8 @@ use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 use crate::handler::helper as ExecuteHelper;
 use crate::{ContractError, state::{ENTRIES, STATE, Entry}};
+
+// FIX this
 use cw20::Cw20ExecuteMsg;
 use terra_cosmwasm::TerraQuerier;
 
@@ -69,14 +71,12 @@ pub fn try_claim(deps: DepsMut, info: MessageInfo, entry_address: String) -> Res
     let valid_address = deps.api.addr_validate(&entry_address)?;
     let update_entry = |entry: Option<Entry>| -> Result<Entry, ContractError> {
         match entry {
-            Some(entry) => ExecuteHelper::some_claim_helper(entry),
+            Some(entry) => ExecuteHelper::some_claim_helper(info, entry),
             None => Err(ContractError::CannotClaimWithoutDeposit {}),
         }
     };
 
     if info.sender == entry_address || info.sender == state.owner {
-        // TODO: make sure they have claimable MIN to claim
-        // transfer MIN from protocol wallet to users wallet
         ENTRIES.update(deps.storage, &valid_address, update_entry)?;
     } else {
         return Err(ContractError::Unauthorized {});
@@ -84,14 +84,26 @@ pub fn try_claim(deps: DepsMut, info: MessageInfo, entry_address: String) -> Res
     Ok(Response::new().add_attribute("method", "try_claim"))
 }
 
-pub fn try_sell(deps: DepsMut, info: MessageInfo, entry_address: String, amount: Uint128) -> Result<Response, ContractError> {
+pub fn try_sell(deps: DepsMut, info: MessageInfo, env: Env, entry_address: String, amount: Uint128) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     let valid_address = deps.api.addr_validate(&entry_address)?;
     
     if info.sender == entry_address || info.sender == state.owner {
         // TODO: make sure they have amount of MIN in wallet to sell, 
-        // transfer UST from protocol wallet to users wallet, 
+        // transfer UST from protocol to users wallet, 
+        let mut response: Response = Default::default();
+        let coin_amount = coins(amount.u128(), "uust");
+        response.messages = vec![SubMsg::new(BankMsg::Send {
+            to_address: entry_address,
+            amount: coin_amount,
+        })];
         // transfer MIN from users wallet to protocol wallet,
+        let mut response: Response = Default::default();
+        let coin_amount = coins(amount.u128(), "umin");
+        response.messages = vec![SubMsg::new(BankMsg::Send {
+            to_address: env.contract.address.to_string(),
+            amount: coin_amount,
+        })];
     } else {
         return Err(ContractError::Unauthorized {});
     }
@@ -101,12 +113,6 @@ pub fn try_sell(deps: DepsMut, info: MessageInfo, entry_address: String, amount:
 pub fn try_update_entries(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     let entries: StdResult<Vec<_>> = ENTRIES.range(deps.storage, None, None, Order::Ascending).collect();
-    let update_entries = |entry: Option<Entry>| -> Result<Entry, ContractError> {
-        match entry {
-            Some(entry) => ExecuteHelper::some_claim_helper(entry),
-            None => Err(ContractError::CannotClaimWithoutDeposit {}),
-        }
-    };
 
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
@@ -134,32 +140,26 @@ pub fn try_cashout_yield(deps: DepsMut, info: MessageInfo) -> Result<Response, C
     Ok(Response::new().add_attribute("method", "try_cashout_yield"))
 }
 
-pub fn try_set_protocol_wallet(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
-    let state = STATE.load(deps.storage)?;
-    if info.sender != state.owner {
-        return Err(ContractError::Unauthorized {});
-    } else {
-        // TODO:
-    }
-    Ok(Response::new().add_attribute("method", "try_set_protocol_wallet"))
-}
-
-pub fn try_set_treasury_wallet(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+pub fn try_set_treasury_wallet(deps: DepsMut, info: MessageInfo, address: String) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;   
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {
-        // TODO
+        let valid_address = deps.api.addr_validate(&address)?;
+        state.treasury_wallet = valid_address;
+        STATE.save(deps.storage, &state)?;
     }
     Ok(Response::new().add_attribute("method", "try_set_treasury_wallet"))
 }
 
-pub fn try_set_reward_contract(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+pub fn try_set_reward_contract(deps: DepsMut, info: MessageInfo, address: String) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {
-        // TODO
+        let valid_address = deps.api.addr_validate(&address)?;
+        state.reward_contract = valid_address;
+        STATE.save(deps.storage, &state)?;
     }
     Ok(Response::new().add_attribute("method", "try_set_reward_contract"))
 }
@@ -169,7 +169,22 @@ pub fn try_set_tier_data(deps: DepsMut, info: MessageInfo, data: (u8, f64, u64))
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {
-        // TODO
+        if data.0 == 0 {
+            state.tier0rate = data.1;
+            state.tier0time = data.2;
+        } else if data.0 == 1 {
+            state.tier1rate = data.1;
+            state.tier1time = data.2;
+        } else if data.0 == 2 {
+            state.tier2rate = data.1;
+            state.tier2time = data.2;
+        } else if data.0 == 3 {
+            state.tier3rate = data.1;
+            state.tier3time = data.2;
+        } else {
+            return Err(ContractError::Unauthorized {});
+        }
+        STATE.save(deps.storage, &state)?;
     }
     Ok(Response::new().add_attribute("method", "try_set_tier_data"))
 }
@@ -185,6 +200,9 @@ pub fn try_set_anc_market(deps: DepsMut, info: MessageInfo, address: CanonicalAd
     Ok(Response::new().add_attribute("method", "try_set_tier_data"))
 }
 
+// helpers, move to helper file
+
+// Figure out these errors, see if they even are errors because pylon uses them still or so it seems
 pub fn compute_tax(deps: DepsMut, coin: &Coin) -> StdResult<Uint256> {
     let terra_querier = TerraQuerier::new(&deps.querier);
     let tax_rate = Decimal256::from((terra_querier.query_tax_rate()?).rate);

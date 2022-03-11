@@ -2,6 +2,7 @@ use crate::contract;
 
 use cosmwasm_std::{from_binary, to_binary};
 
+/* 
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -72,3 +73,4 @@ mod tests {
         assert_eq!(5, value.count);
     }
 }
+*/

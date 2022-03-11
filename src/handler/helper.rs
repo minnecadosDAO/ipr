@@ -1,4 +1,4 @@
-use cosmwasm_std::{StdResult, Uint128, Deps, CanonicalAddr, CosmosMsg, to_binary, WasmMsg};
+use cosmwasm_std::{StdResult, Uint128, Response, Deps, CanonicalAddr, CosmosMsg, to_binary, WasmMsg, coins, SubMsg, BankMsg, MessageInfo};
 use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 
@@ -98,7 +98,18 @@ pub(crate) fn some_withdraw_helper(mut entry: Entry, time: u64, mut amount: Uint
     Ok(entry)
 }
 
-pub(crate) fn some_claim_helper(mut entry: Entry) -> Result<Entry, ContractError> {
+pub(crate) fn some_claim_helper(info: MessageInfo, mut entry: Entry) -> Result<Entry, ContractError> {
+    if entry.claimable_reward == Uint128::zero() {
+        return Err(ContractError::Unauthorized {});
+    }
+    // transfer MIN from treasury wallet to users wallet
+    // will have to send MIN/Perma to this smart contract to give out
+    let mut response: Response = Default::default();
+    let coin_amount = coins(entry.claimable_reward.u128(), "umin");
+    response.messages = vec![SubMsg::new(BankMsg::Send {
+        to_address: info.sender.to_string(),
+        amount: coin_amount,
+    })];
     entry.claimable_reward = Uint128::zero();
     Ok(entry)
 }

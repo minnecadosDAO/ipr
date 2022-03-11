@@ -31,8 +31,8 @@ pub enum ExecuteMsg {
     SellReward { entry_address: String, amount: Uint128 },
     UpdateEntries {},
     CashoutYield {},
-    SetTreasuryWallet {},
-    SetRewardContract {},
+    SetTreasuryWallet { address: String },
+    SetRewardContract { address: String },
     SetTierData { data: (u8, f64, u64) },
     SetAncMarket { address: CanonicalAddr },
 }
