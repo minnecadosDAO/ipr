@@ -19,11 +19,11 @@ pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
     let state = STATE.load(deps.storage)?;
     Ok(StateResponse { 
         owner: state.owner,
-        protocol_wallet: state.protocol_wallet,
         treasury_wallet: state.treasury_wallet,
         reward_contract: state.reward_contract,
         ust_deposited: state.ust_deposited,
         sellback_price: state.sellback_price,
+        anc_market: state.anc_market,
         tier0rate: state.tier0rate,
         tier0time: state.tier0time,
         tier1rate: state.tier1rate,

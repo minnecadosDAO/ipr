@@ -1,17 +1,16 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cosmwasm_std::{Addr};
+use cosmwasm_std::{Addr, Uint128, CanonicalAddr};
 use cw_storage_plus::{Item, Map};
-use cosmwasm_std::Timestamp;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
     pub owner: Addr,
-    pub protocol_wallet: Addr,
     pub treasury_wallet: Addr,
     pub reward_contract: Addr,
-    pub ust_deposited: u64,
+    pub ust_deposited: Uint128,
     pub sellback_price: u64,
+    pub anc_market: CanonicalAddr,
     pub tier0rate: f64,
     pub tier0time: u64,
     pub tier1rate: f64,
@@ -24,8 +23,8 @@ pub struct State {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Entry {
-    pub claimable_reward: u64,
-    pub ust_deposited: u64,
+    pub claimable_reward: Uint128,
+    pub ust_deposited: Uint128,
     pub averaged_reward_rate: f64,
     pub ust_deposit_log: Vec<Deposit>,
     pub ust_withdraw_log: Vec<Withdraw>,
@@ -34,20 +33,20 @@ pub struct Entry {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Deposit {
-    pub amount: u64,
-    pub time: Timestamp,
+    pub amount: Uint128,
+    pub time: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Withdraw {
-    pub amount: u64,
-    pub time: Timestamp,
+    pub amount: Uint128,
+    pub time: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Reward {
-    pub amount: u64,
-    pub time: Timestamp,
+    pub amount: Uint128,
+    pub time: u64,
     pub reward_tier: u8,
 }
 

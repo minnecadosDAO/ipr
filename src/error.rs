@@ -20,4 +20,7 @@ pub enum ContractError {
 
     #[error("You cannot claim rewards without depositing UST")]
     CannotClaimWithoutDeposit {},
+
+    #[error("Invalid zero amount")]
+    InvalidZeroAmount {},
 }

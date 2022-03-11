@@ -7,7 +7,7 @@ use crate::error::ContractError;
 //RewardTiersResponse
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
-use crate::state::{State, STATE, ENTRIES};
+use crate::state::{State, STATE};
 
 use crate::handler::execute as ExecuteHandler;
 use crate::handler::query as QueryHandler;
@@ -25,11 +25,11 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     let state = State {
         owner: info.sender.clone(),
-        protocol_wallet: info.sender.clone(),
         treasury_wallet: info.sender.clone(),
         reward_contract: info.sender.clone(),
         ust_deposited: msg.ust_deposited,
         sellback_price: msg.sellback_price,
+        anc_market: msg.anc_market,
         tier0rate: msg.tier0rate,
         tier0time: msg.tier0time,
         tier1rate: msg.tier1rate,
@@ -45,7 +45,6 @@ pub fn instantiate(
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("owner", state.owner)
-        .add_attribute("protocol_wallet", state.protocol_wallet)
         .add_attribute("treasury_wallet", state.treasury_wallet)
         .add_attribute("reward_contract", state.reward_contract)
         .add_attribute("ust_deposited", state.ust_deposited.to_string())
@@ -60,15 +59,16 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::DepositUst { entry_address, amount } => ExecuteHandler::try_deposit(deps, entry_address, amount),
-        ExecuteMsg::WithdrawUst { entry_address, amount } => ExecuteHandler::try_withdraw(deps, entry_address, amount),
-        ExecuteMsg::ClaimReward { entry_address } => ExecuteHandler::try_claim(deps, entry_address),
-        ExecuteMsg::SellReward { entry_address } => ExecuteHandler::try_sell(deps, entry_address),  
-        ExecuteMsg::UpdateStateAndEntries {} => ExecuteHandler::try_update_state_and_entries(deps, info),  
+        ExecuteMsg::DepositUst { entry_address, amount } => ExecuteHandler::try_deposit(deps, info, _env, entry_address, amount),
+        ExecuteMsg::WithdrawUst { entry_address, amount } => ExecuteHandler::try_withdraw(deps, info, _env, entry_address, amount),
+        ExecuteMsg::ClaimReward { entry_address } => ExecuteHandler::try_claim(deps, info, entry_address),
+        ExecuteMsg::SellReward { entry_address, amount } => ExecuteHandler::try_sell(deps, info, entry_address, amount),  
+        ExecuteMsg::UpdateEntries {} => ExecuteHandler::try_update_entries(deps, info),  
         ExecuteMsg::CashoutYield {} => ExecuteHandler::try_cashout_yield(deps, info),
-        ExecuteMsg::SetProtocolWallet {} => ExecuteHandler::try_set_protocol_wallet(deps, info),
         ExecuteMsg::SetTreasuryWallet {} => ExecuteHandler::try_set_treasury_wallet(deps, info),
         ExecuteMsg::SetRewardContract {} => ExecuteHandler::try_set_reward_contract(deps, info),
+        ExecuteMsg::SetTierData { data } => ExecuteHandler::try_set_tier_data(deps, info, data),
+        ExecuteMsg::SetAncMarket { address } => ExecuteHandler::try_set_anc_market(deps, info, address),
     }
 }
 
