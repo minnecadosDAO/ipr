@@ -1,34 +1,11 @@
-use cosmwasm_std::{StdResult, Uint128, Response, Deps, CanonicalAddr, CosmosMsg, to_binary, WasmMsg, coins, SubMsg, BankMsg, MessageInfo};
-use schemars::JsonSchema;
-use serde::{Serialize, Deserialize};
-
+use cosmwasm_std::{StdResult, Uint128, Response, coins, SubMsg, BankMsg, MessageInfo, DepsMut, Env, CosmosMsg, WasmMsg, to_binary};
+use crate::handler::anchor;
+use cw20::{Cw20ExecuteMsg};
+use crate::state::STATE;
 use crate::{state::{Entry, Deposit, Reward, Withdraw}, ContractError};
 
-/* 
-use cosmwasm_std::*;
-use terra_cosmwasm::TerraQuerier;
-
-pub fn compute_tax(deps: Deps, coin: &Coin) -> StdResult<Uint256> {
-    let terra_querier = TerraQuerier::new(&deps.querier);
-    let tax_rate = Decimal256::from((terra_querier.query_tax_rate()?).rate);
-    let tax_cap = Uint256::from((terra_querier.query_tax_cap(coin.denom.to_string())?).cap);
-    let amount = Uint256::from(coin.amount);
-    Ok(std::cmp::min(
-        amount * Decimal256::one() - amount / (Decimal256::one() + tax_rate),
-        tax_cap,
-    ))
-}
-
-pub fn deduct_tax(deps: Deps, coin: Coin) -> StdResult<Coin> {
-    let tax_amount = compute_tax(deps, &coin)?;
-    Ok(Coin {
-        denom: coin.denom,
-        amount: (Uint256::from(coin.amount) - tax_amount).into(),
-    })
-}
-*/
-
-pub(crate) fn some_deposit_helper(mut entry: Entry, amount: Uint128, time: u64) -> StdResult<Entry> {
+pub(crate) fn some_deposit_helper(deps: DepsMut, info: MessageInfo, env: Env, mut entry: Entry, amount: Uint128, time: u64) -> StdResult<Entry> {
+    let deposit = make_deposit_and_convert_to_aust(deps, info, env, amount);    
     entry.ust_deposited += amount;
     let deposit = Deposit {
         amount: amount,
@@ -44,7 +21,8 @@ pub(crate) fn some_deposit_helper(mut entry: Entry, amount: Uint128, time: u64) 
     Ok(entry)
 }
 
-pub(crate) fn none_deposit_helper(amount: Uint128, time: u64) -> StdResult<Entry> {
+pub(crate) fn none_deposit_helper(deps: DepsMut, info: MessageInfo, env: Env, amount: Uint128, time: u64) -> StdResult<Entry> {
+    let make_deposit = make_deposit_and_convert_to_aust(deps, info, env, amount);
     let deposit = Deposit {
         amount: amount,
         time: time,
@@ -65,7 +43,25 @@ pub(crate) fn none_deposit_helper(amount: Uint128, time: u64) -> StdResult<Entry
     Ok(entry)
 }
 
-pub(crate) fn some_withdraw_helper(mut entry: Entry, time: u64, mut amount: Uint128) -> Result<Entry, ContractError> {
+fn make_deposit_and_convert_to_aust(deps: DepsMut, info: MessageInfo, env: Env, amount: Uint128) -> Result<Response, ContractError> {
+    let state = STATE.load(deps.storage)?;
+    // transfer funds from user to protocol
+    let mut response: Response = Default::default();
+    let coin_amount = coins(amount.u128(), "uust");
+    // I think including cw20 has messed with dependencies bringing in newest alpha version of cosmwasm_std
+    response.messages = vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: env.contract.address.to_string(),
+        msg: to_binary(&Cw20ExecuteMsg::Send {amount: amount, contract:env.contract.address.to_string(), msg: to_binary("data")?})?,
+        funds: coin_amount,
+    }))];
+
+    // swap ust for aust
+    let deposit = anchor::deposit_stable_msg(deps.as_ref(), &state.anc_market, "uust", amount);
+    Ok(Response::new().add_attribute("method", "make_deposit_and_convert_to_aust"))
+}
+
+pub(crate) fn some_withdraw_helper(deps: DepsMut, info: MessageInfo, mut entry: Entry, time: u64, mut amount: Uint128) -> Result<Entry, ContractError> {
+    let make_withdraw = convert_from_aust_and_make_withdraw(deps, info, env, amount);
     if entry.ust_deposited == Uint128::zero() {
         return Err(ContractError::CannotWithdrawBalanceZero {});
     }
@@ -94,8 +90,21 @@ pub(crate) fn some_withdraw_helper(mut entry: Entry, time: u64, mut amount: Uint
             }
         }
     }
-
     Ok(entry)
+}
+
+fn convert_from_aust_and_make_withdraw(deps: DepsMut, info: MessageInfo, env: Env, amount: Uint128) -> Result<Response, ContractError> {
+    let state = STATE.load(deps.storage)?;
+    // swap from aust to ust
+    let withdraw = anchor::redeem_stable_msg(deps, &state.anc_market, &state.aust_contract, amount);
+    // transfer funds from contract to users wallet
+    let mut response: Response = Default::default();
+    let coin_amount = coins(amount.u128(), "uust");
+    response.messages = vec![SubMsg::new(BankMsg::Send {
+        to_address: info.sender.to_string(),
+        amount: coin_amount,
+    })];
+    Ok(Response::new().add_attribute("method", "convert_from_aust_and_make_withdraw"))
 }
 
 pub(crate) fn some_claim_helper(info: MessageInfo, mut entry: Entry) -> Result<Entry, ContractError> {
@@ -103,7 +112,7 @@ pub(crate) fn some_claim_helper(info: MessageInfo, mut entry: Entry) -> Result<E
         return Err(ContractError::Unauthorized {});
     }
     // transfer MIN from treasury wallet to users wallet
-    // will have to send MIN/Perma to this smart contract to give out
+    // will have to send MIN to this smart contract to give out
     let mut response: Response = Default::default();
     let coin_amount = coins(entry.claimable_reward.u128(), "umin");
     response.messages = vec![SubMsg::new(BankMsg::Send {
@@ -113,55 +122,3 @@ pub(crate) fn some_claim_helper(info: MessageInfo, mut entry: Entry) -> Result<E
     entry.claimable_reward = Uint128::zero();
     Ok(entry)
 }
-
-/* 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum HandleMsg {
-    DepositStable {},
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum Cw20HookMsg {
-    /// Return stable coins to a user
-    /// according to exchange rate
-    RedeemStable {},
-}
-
-pub fn deposit_stable_msg(
-    deps: Deps,
-    market: &CanonicalAddr,
-    denom: &str,
-    amount: Uint128,
-) -> StdResult<Vec<CosmosMsg>> {
-    Ok(vec![CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: deps.api.addr_humanize(market).unwrap().to_string(),
-        msg: to_binary(&HandleMsg::DepositStable {})?,
-        funds: vec![deduct_tax(
-            deps,
-            Coin {
-                denom: denom.to_string(),
-                amount,
-            },
-        )?],
-    })])
-}
-
-pub fn redeem_stable_msg(
-    deps: Deps,
-    market: &CanonicalAddr,
-    token: &CanonicalAddr,
-    amount: Uint128,
-) -> StdResult<Vec<CosmosMsg>> {
-    Ok(vec![CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: deps.api.addr_humanize(token).unwrap().to_string(),
-        msg: to_binary(&Cw20ExecuteMsg::Send {
-            contract: deps.api.addr_humanize(market).unwrap().to_string(),
-            amount,
-            msg: to_binary(&Cw20HookMsg::RedeemStable {}).unwrap(),
-        })?,
-        funds: vec![],
-    })])
-}
-*/
