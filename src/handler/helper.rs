@@ -1,6 +1,6 @@
 use cosmwasm_std::{StdResult, Uint128, Response, coins, SubMsg, BankMsg, MessageInfo, DepsMut, Env, CosmosMsg, WasmMsg, to_binary};
 use crate::handler::anchor;
-use cw20::{Cw20ExecuteMsg};
+//use cw20::{Cw20ExecuteMsg};
 use crate::state::STATE;
 use crate::{state::{Entry, Deposit, Reward, Withdraw}, ContractError};
 
@@ -60,12 +60,12 @@ fn make_deposit_and_convert_to_aust(deps: DepsMut, info: MessageInfo, env: Env, 
     Ok(Response::new().add_attribute("method", "make_deposit_and_convert_to_aust"))
 }
 
-pub(crate) fn some_withdraw_helper(deps: DepsMut, info: MessageInfo, mut entry: Entry, time: u64, mut amount: Uint128) -> Result<Entry, ContractError> {
+pub(crate) fn some_withdraw_helper(deps: DepsMut, env: Env, info: MessageInfo, mut entry: Entry, time: u64, mut amount: Uint128) -> Result<Entry, ContractError> {
     let make_withdraw = convert_from_aust_and_make_withdraw(deps, info, env, amount);
     if entry.ust_deposited == Uint128::zero() {
         return Err(ContractError::CannotWithdrawBalanceZero {});
     }
-    if (amount <= entry.ust_deposited){
+    if amount <= entry.ust_deposited {
         entry.ust_deposited -= amount;
     } else {
         return Err(ContractError::CannotWithdrawGreaterThanBalance {});

@@ -1,4 +1,4 @@
-use cosmwasm_std::{DepsMut, Response, MessageInfo, StdResult, Order, Uint128, Env, SubMsg, BankMsg, coins, CanonicalAddr};
+use cosmwasm_std::{DepsMut, Response, MessageInfo, StdResult, Uint128, Env, SubMsg, BankMsg, coins, CanonicalAddr};
 use crate::handler::helper as ExecuteHelper;
 use crate::{ContractError, state::{ENTRIES, STATE, Entry}};
 
@@ -27,7 +27,7 @@ pub fn try_withdraw(deps: DepsMut, info: MessageInfo, env: Env, entry_address: S
     let time = env.block.time.seconds();
     let update_entry = |entry: Option<Entry>| -> Result<Entry, ContractError> {
         match entry {
-            Some(entry) => ExecuteHelper::some_withdraw_helper(deps, info, entry, time, amount),
+            Some(entry) => ExecuteHelper::some_withdraw_helper(deps, env, info, entry, time, amount),
             None => Err(ContractError::CannotWithdrawWithoutDeposit {}),
         }
     };
