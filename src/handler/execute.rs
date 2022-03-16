@@ -8,8 +8,8 @@ pub fn try_deposit(deps: DepsMut, info: MessageInfo, env: Env, entry_address: St
     let time = env.block.time.seconds();
     let update_entry = |entry: Option<Entry>| -> StdResult<Entry> {
         match entry {
-            Some(entry) => ExecuteHelper::some_deposit_helper(deps, info, env, entry, amount, time),
-            None => ExecuteHelper::none_deposit_helper(deps, info, env, amount, time),
+            Some(entry) => ExecuteHelper::some_deposit_helper(state, deps, env, entry, amount, time),
+            None => ExecuteHelper::none_deposit_helper(state, deps, env, amount, time),
         }
     };
 
@@ -27,7 +27,7 @@ pub fn try_withdraw(deps: DepsMut, info: MessageInfo, env: Env, entry_address: S
     let time = env.block.time.seconds();
     let update_entry = |entry: Option<Entry>| -> Result<Entry, ContractError> {
         match entry {
-            Some(entry) => ExecuteHelper::some_withdraw_helper(deps, env, info, entry, time, amount),
+            Some(entry) => ExecuteHelper::some_withdraw_helper(deps, info, entry, time, amount),
             None => Err(ContractError::CannotWithdrawWithoutDeposit {}),
         }
     };
@@ -62,7 +62,7 @@ pub fn try_claim(deps: DepsMut, info: MessageInfo, entry_address: String) -> Res
 
 pub fn try_sell(deps: DepsMut, info: MessageInfo, env: Env, entry_address: String, amount: Uint128) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
-    let valid_address = deps.api.addr_validate(&entry_address)?;
+    //let valid_address = deps.api.addr_validate(&entry_address)?;
     
     if info.sender == entry_address || info.sender == state.owner {
         // TODO: make sure they have amount of MIN in wallet to sell, 
@@ -118,7 +118,7 @@ pub fn try_cashout_yield(deps: DepsMut, info: MessageInfo) -> Result<Response, C
 }
 
 pub fn try_set_treasury_wallet(deps: DepsMut, info: MessageInfo, address: String) -> Result<Response, ContractError> {
-    let state = STATE.load(deps.storage)?;   
+    let mut state = STATE.load(deps.storage)?;   
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {
@@ -130,7 +130,7 @@ pub fn try_set_treasury_wallet(deps: DepsMut, info: MessageInfo, address: String
 }
 
 pub fn try_set_reward_contract(deps: DepsMut, info: MessageInfo, address: String) -> Result<Response, ContractError> {
-    let state = STATE.load(deps.storage)?;
+    let mut state = STATE.load(deps.storage)?;
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {
@@ -142,7 +142,7 @@ pub fn try_set_reward_contract(deps: DepsMut, info: MessageInfo, address: String
 }
 
 pub fn try_set_tier_data(deps: DepsMut, info: MessageInfo, data: (u8, f64, u64)) -> Result<Response, ContractError> {
-    let state = STATE.load(deps.storage)?;
+    let mut state = STATE.load(deps.storage)?;
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {
@@ -167,7 +167,7 @@ pub fn try_set_tier_data(deps: DepsMut, info: MessageInfo, data: (u8, f64, u64))
 }
 
 pub fn try_set_anc_market(deps: DepsMut, info: MessageInfo, address: CanonicalAddr) -> Result<Response, ContractError> {
-    let state = STATE.load(deps.storage)?;
+    let mut state = STATE.load(deps.storage)?;
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {

@@ -1,6 +1,6 @@
-use crate::contract;
+//use crate::contract;
 
-use cosmwasm_std::{from_binary, to_binary};
+//use cosmwasm_std::{from_binary, to_binary};
 
 /* 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use cosmwasm_bignumber::{Decimal256, Uint256};
 use cosmwasm_std::*;
-//use cw20::Cw20ExecuteMsg;
+use cw20::Cw20ExecuteMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use terra_cosmwasm::TerraQuerier;
@@ -92,12 +92,7 @@ pub enum Cw20HookMsg {
     RedeemStable {},
 }
 
-pub fn deposit_stable_msg(
-    deps: Deps,
-    market: &CanonicalAddr,
-    denom: &str,
-    amount: Uint128,
-) -> StdResult<Vec<CosmosMsg>> {
+pub fn deposit_stable_msg(deps: Deps, market: &CanonicalAddr, denom: &str, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
     Ok(vec![CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: deps.api.addr_humanize(market).unwrap().to_string(),
         msg: to_binary(&HandleMsg::DepositStable {})?,
@@ -111,12 +106,7 @@ pub fn deposit_stable_msg(
     })])
 }
 
-pub fn redeem_stable_msg(
-    deps: DepsMut,
-    market: &CanonicalAddr,
-    token: &CanonicalAddr,
-    amount: Uint128,
-) -> StdResult<Vec<CosmosMsg>> {
+pub fn redeem_stable_msg(deps: DepsMut, market: &CanonicalAddr, token: &CanonicalAddr, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
     Ok(vec![CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: deps.api.addr_humanize(token).unwrap().to_string(),
         msg: to_binary(&Cw20ExecuteMsg::Send {
