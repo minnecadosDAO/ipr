@@ -1,11 +1,11 @@
 use cosmwasm_std::{StdResult, Uint128, Response, coins, SubMsg, BankMsg, MessageInfo, DepsMut, Env, CosmosMsg, WasmMsg, to_binary};
 use crate::handler::anchor;
 use cw20::Cw20ExecuteMsg;
-use crate::state::{STATE, State};
+use crate::state::{STATE};
 use crate::{state::{Entry, Deposit, Reward, Withdraw}, ContractError};
 
-pub(crate) fn some_deposit_helper(state: State, deps: DepsMut, env: Env, mut entry: Entry, amount: Uint128, time: u64) -> StdResult<Entry> {
-    make_deposit_and_convert_to_aust(state, deps, env, amount);    
+pub(crate) fn some_deposit_helper(deps: DepsMut, env: Env, mut entry: Entry, amount: Uint128, time: u64) -> StdResult<Entry> {
+    make_deposit_and_convert_to_aust(deps, env, amount);    
     entry.ust_deposited += amount;
     let deposit = Deposit {
         amount: amount,
@@ -21,8 +21,8 @@ pub(crate) fn some_deposit_helper(state: State, deps: DepsMut, env: Env, mut ent
     Ok(entry)
 }
 
-pub(crate) fn none_deposit_helper(state: State, deps: DepsMut, env: Env, amount: Uint128, time: u64) -> StdResult<Entry> {
-    make_deposit_and_convert_to_aust(state, deps, env, amount);
+pub(crate) fn none_deposit_helper(deps: DepsMut, env: Env, amount: Uint128, time: u64) -> StdResult<Entry> {
+    make_deposit_and_convert_to_aust(deps, env, amount);
     let deposit = Deposit {
         amount: amount,
         time: time,
@@ -43,7 +43,8 @@ pub(crate) fn none_deposit_helper(state: State, deps: DepsMut, env: Env, amount:
     Ok(entry)
 }
 
-fn make_deposit_and_convert_to_aust(state: State, deps: DepsMut, env: Env, amount: Uint128) -> Result<Response, ContractError> {
+fn make_deposit_and_convert_to_aust(deps: DepsMut, env: Env, amount: Uint128) -> Result<Response, ContractError> {
+    let state = STATE.load(deps.storage)?;
     // transfer funds from user to protocol
     let mut response: Response = Default::default();
     let coin_amount = coins(amount.u128(), "uust");

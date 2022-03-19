@@ -8,12 +8,14 @@ pub fn try_deposit(deps: DepsMut, info: MessageInfo, env: Env, entry_address: St
     let time = env.block.time.seconds();
     let update_entry = |entry: Option<Entry>| -> StdResult<Entry> {
         match entry {
-            Some(entry) => ExecuteHelper::some_deposit_helper(state, deps, env, entry, amount, time),
-            None => ExecuteHelper::none_deposit_helper(state, deps, env, amount, time),
+            Some(entry) => ExecuteHelper::some_deposit_helper(deps, env, entry, amount, time),
+            None => ExecuteHelper::none_deposit_helper(deps, env, amount, time),
         }
     };
 
     if info.sender == entry_address || info.sender == state.owner {
+
+        // gonna have to solve this, look at cw contracts for inspiration
         ENTRIES.update(deps.storage, &valid_address, update_entry)?;
     } else {
         return Err(ContractError::Unauthorized {});
