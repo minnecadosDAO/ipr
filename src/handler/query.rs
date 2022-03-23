@@ -1,6 +1,6 @@
 use cosmwasm_std::{Deps, StdResult};
 
-use crate::{msg::{EntryResponse, StateResponse}, state::{STATE, ENTRIES}};
+use crate::{msg::{EntryResponse, StateResponse }, state::{STATE, ENTRIES}};
 
 pub fn query_entry(deps: Deps, entry_address: String) -> StdResult<EntryResponse> {
     let valid_address = deps.api.addr_validate(&entry_address)?;
@@ -36,10 +36,10 @@ pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
     })
 }
 
+/*
 pub fn query_balance(deps: Deps, address: String) -> StdResult<BalanceResponse> {
     let address = deps.api.addr_validate(&address)?;
-    let balance = BALANCES
-        .may_load(deps.storage, &address)?
-        .unwrap_or_default();
-    Ok(BalanceResponse { balance })
+    let amount = BALANCES.may_load(deps.storage, &address)?.unwrap_or_default();
+    Ok(BalanceResponse { amount })
 }
+*/

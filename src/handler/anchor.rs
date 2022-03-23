@@ -48,6 +48,7 @@ pub struct ConfigResponse {
     pub max_borrow_factor: Decimal256,
 }
 
+/* 
 pub fn config(deps: Deps, market: &CanonicalAddr) -> StdResult<ConfigResponse> {
     let market_config: ConfigResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
@@ -57,6 +58,7 @@ pub fn config(deps: Deps, market: &CanonicalAddr) -> StdResult<ConfigResponse> {
 
     Ok(market_config)
 }
+*/
 
 // We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -65,6 +67,7 @@ pub struct EpochStateResponse {
     pub aterra_supply: Uint256,
 }
 
+/*
 pub fn epoch_state(deps: Deps, market: &CanonicalAddr) -> StdResult<EpochStateResponse> {
     let epoch_state: EpochStateResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
@@ -77,6 +80,7 @@ pub fn epoch_state(deps: Deps, market: &CanonicalAddr) -> StdResult<EpochStateRe
 
     Ok(epoch_state)
 }
+*/
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -106,7 +110,7 @@ pub fn deposit_stable_msg(deps: Deps, market: &CanonicalAddr, denom: &str, amoun
     })])
 }
 
-pub fn redeem_stable_msg(deps: DepsMut, market: &CanonicalAddr, token: &CanonicalAddr, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
+pub fn redeem_stable_msg(deps: Deps, market: &CanonicalAddr, token: &CanonicalAddr, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
     Ok(vec![CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: deps.api.addr_humanize(token).unwrap().to_string(),
         msg: to_binary(&Cw20ExecuteMsg::Send {

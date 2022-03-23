@@ -35,7 +35,7 @@ pub enum ExecuteMsg {
     SetRewardContract { address: String },
     SetTierData { data: (u8, f64, u64) },
     SetAncMarket { address: CanonicalAddr },
-    Send { address: String },
+    //Send { address: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -43,8 +43,7 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     GetEntry { entry_address: String },
     GetState {},
-    Balance {},
-
+    //Balance { address: String },
 }
 
 // We define a custom struct for each query response
@@ -76,3 +75,4 @@ pub struct StateResponse {
     pub tier3rate: f64,
     pub tier3time: u64,
 }
+
