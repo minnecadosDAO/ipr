@@ -3,29 +3,6 @@ use crate::{ContractError, state::{ENTRIES, STATE, Entry}};
 use crate::handler::anchor;
 use cw20::Cw20ExecuteMsg;
 use crate::{state::{Deposit, Reward, Withdraw}};
-//use super::{anchor::deduct_tax};
-
-/*
-pub fn send(deps: DepsMut, env: Env, info: MessageInfo, addr: String) -> Result<Response, ContractError> {
-    // do access control checks here. You want to restrict who can call this function
-
-    // this method withdraws the entire balance from smart contract
-    // you might want to restrict how much UST can be withdrawn
-    let balance = query_balance(&deps.querier, env.contract.address.clone(), "uusd".to_string())?;
-    let msg = CosmosMsg::Bank(BankMsg::Send {
-        to_address: addr,
-        amount: vec![deduct_tax(
-            deps.as_ref(),
-            Coin {
-                denom: "uusd".to_string(),
-                amount: balance,
-            },
-        )?],
-    });
-
-    Ok(Response::new().add_message(msg))
-}
-*/
 
 pub fn try_deposit(deps: DepsMut, info: MessageInfo, env: Env, entry_address: String, amount: Uint128) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
@@ -34,41 +11,8 @@ pub fn try_deposit(deps: DepsMut, info: MessageInfo, env: Env, entry_address: St
     
     let upsert_entry = |entry: Option<Entry>| -> StdResult<Entry> {
         match entry {
-            Some(mut entry) => {
-                entry.ust_deposited += amount;
-                let deposit = Deposit {
-                    amount: amount,
-                    time: time,
-                };
-                entry.ust_deposit_log.push(deposit);
-                let reward = Reward {
-                    amount: amount,
-                    time: time,
-                    reward_tier: 0,
-                };
-                entry.dynamic_reward_log.push(reward);
-                Ok(entry)
-            },
-            None => {
-                let deposit = Deposit {
-                    amount: amount,
-                    time: time,
-                };
-                let reward = Reward {
-                    amount: amount,
-                    time: time,
-                    reward_tier: 0,
-                };
-                let entry = Entry {
-                    claimable_reward: Uint128::zero(), 
-                    ust_deposited: amount, 
-                    averaged_reward_rate: 0.0,
-                    ust_deposit_log: vec![deposit], 
-                    ust_withdraw_log: vec![], 
-                    dynamic_reward_log: vec![reward] 
-                };
-                Ok(entry)
-            },
+            Some(entry) => {some_deposit_helper(entry, amount, time)},
+            None => {none_deposit_helper(amount, time)},
         }
     };
     
@@ -162,6 +106,7 @@ pub fn try_sell(deps: DepsMut, info: MessageInfo, env: Env, entry_address: Strin
     Ok(Response::new().add_attribute("method", "try_sell"))
 }
 
+// TODO
 pub fn try_update_entries(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     // let entries: StdResult<Vec<_>> = ENTRIES.range(deps.storage, None, None, Order::Ascending).collect();
@@ -179,6 +124,7 @@ pub fn try_update_entries(deps: DepsMut, info: MessageInfo) -> Result<Response, 
     Ok(Response::new().add_attribute("method", "try_update_state_and_entries"))
 }
 
+// TODO
 pub fn try_cashout_yield(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     if info.sender != state.owner {
@@ -252,8 +198,8 @@ pub fn try_set_anc_market(deps: DepsMut, info: MessageInfo, address: CanonicalAd
     Ok(Response::new().add_attribute("method", "try_set_tier_data"))
 }
 
-/*
-fn some_deposit_helper(deps: DepsMut, env: Env, mut entry: Entry, amount: Uint128, time: u64) -> StdResult<Entry> {
+// helpers
+fn some_deposit_helper(mut entry: Entry, amount: Uint128, time: u64) -> StdResult<Entry> {
     entry.ust_deposited += amount;
     let deposit = Deposit {
         amount: amount,
@@ -269,7 +215,7 @@ fn some_deposit_helper(deps: DepsMut, env: Env, mut entry: Entry, amount: Uint12
     Ok(entry)
 }
 
-fn none_deposit_helper(deps: DepsMut, env: Env, amount: Uint128, time: u64) -> StdResult<Entry> {
+fn none_deposit_helper(amount: Uint128, time: u64) -> StdResult<Entry> {
     let deposit = Deposit {
         amount: amount,
         time: time,
@@ -289,7 +235,6 @@ fn none_deposit_helper(deps: DepsMut, env: Env, amount: Uint128, time: u64) -> S
     };
     Ok(entry)
 }
-*/
 
 fn make_deposit_and_convert_to_aust(deps: Deps, env: Env, amount: Uint128) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
@@ -356,21 +301,3 @@ fn convert_from_aust_and_make_withdraw(deps: Deps, info: MessageInfo, amount: Ui
     })];
     Ok(Response::new().add_attribute("method", "convert_from_aust_and_make_withdraw"))
 }
-
-/* 
-fn some_claim_helper(info: MessageInfo, mut entry: Entry) -> Result<Entry, ContractError> {
-    if entry.claimable_reward == Uint128::zero() {
-        return Err(ContractError::Unauthorized {});
-    }
-    // transfer MIN from treasury wallet to users wallet
-    // will have to send MIN to this smart contract to give out
-    let mut response: Response = Default::default();
-    let coin_amount = coins(entry.claimable_reward.u128(), "umin");
-    response.messages = vec![SubMsg::new(BankMsg::Send {
-        to_address: info.sender.to_string(),
-        amount: coin_amount,
-    })];
-    entry.claimable_reward = Uint128::zero();
-    Ok(entry)
-}
-*/

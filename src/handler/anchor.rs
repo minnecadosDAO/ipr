@@ -48,39 +48,12 @@ pub struct ConfigResponse {
     pub max_borrow_factor: Decimal256,
 }
 
-/* 
-pub fn config(deps: Deps, market: &CanonicalAddr) -> StdResult<ConfigResponse> {
-    let market_config: ConfigResponse =
-        deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-            contract_addr: deps.api.addr_humanize(market).unwrap().to_string(),
-            msg: to_binary(&QueryMsg::Config {})?,
-        }))?;
-
-    Ok(market_config)
-}
-*/
-
 // We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct EpochStateResponse {
     pub exchange_rate: Decimal256,
     pub aterra_supply: Uint256,
 }
-
-/*
-pub fn epoch_state(deps: Deps, market: &CanonicalAddr) -> StdResult<EpochStateResponse> {
-    let epoch_state: EpochStateResponse =
-        deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-            contract_addr: deps.api.addr_humanize(market).unwrap().to_string(),
-            msg: to_binary(&QueryMsg::EpochState {
-                block_height: None,
-                distributed_interest: None,
-            })?,
-        }))?;
-
-    Ok(epoch_state)
-}
-*/
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
