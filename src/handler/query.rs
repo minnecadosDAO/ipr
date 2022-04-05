@@ -35,11 +35,3 @@ pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
         tier3time: state.tier3time,
     })
 }
-
-/*
-pub fn query_balance(deps: Deps, address: String) -> StdResult<BalanceResponse> {
-    let address = deps.api.addr_validate(&address)?;
-    let amount = BALANCES.may_load(deps.storage, &address)?.unwrap_or_default();
-    Ok(BalanceResponse { amount })
-}
-*/

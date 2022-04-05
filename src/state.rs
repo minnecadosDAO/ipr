@@ -32,18 +32,10 @@ pub struct Entry {
     pub dynamic_reward_log: Vec<Reward>,
 }
 
-impl Entry {
-
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Deposit {
     pub amount: Uint128,
     pub time: u64,
-}
-
-impl Deposit {
-
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -52,19 +44,11 @@ pub struct Withdraw {
     pub time: u64,
 }
 
-impl Withdraw {
-
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Reward {
     pub amount: Uint128,
     pub time: u64,
     pub reward_tier: u8,
-}
-
-impl Reward {
-    
 }
 
 pub const STATE: Item<State> = Item::new("state");

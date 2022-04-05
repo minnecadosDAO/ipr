@@ -38,7 +38,6 @@ pub fn instantiate(
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     STATE.save(deps.storage, &state)?;
-
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("owner", state.owner)
@@ -66,7 +65,6 @@ pub fn execute(
         ExecuteMsg::SetRewardContract {address } => ExecuteHandler::try_set_reward_contract(deps, info, address),
         ExecuteMsg::SetTierData { data } => ExecuteHandler::try_set_tier_data(deps, info, data),
         ExecuteMsg::SetAncMarket { address } => ExecuteHandler::try_set_anc_market(deps, info, address),
-        //ExecuteMsg::Send { address } => ExecuteHandler::send(deps, _env, info, address),
     }
 }
 
@@ -75,6 +73,5 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetEntry { entry_address } => to_binary(&QueryHandler::query_entry(deps, entry_address)?),
         QueryMsg::GetState {} => to_binary(&QueryHandler::query_state(deps)?),
-        //QueryMsg::Balance { address } => to_binary(&QueryHandler::query_balance(deps, address)?),
     }
 }

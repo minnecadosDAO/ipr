@@ -5,7 +5,6 @@ use crate::state::{Deposit, Withdraw, Reward};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub protocol_wallet: Addr,
     pub treasury_wallet: Addr,
     pub reward_contract: Addr,
     pub ust_deposited: Uint128,
@@ -35,7 +34,6 @@ pub enum ExecuteMsg {
     SetRewardContract { address: String },
     SetTierData { data: (u8, f64, u64) },
     SetAncMarket { address: CanonicalAddr },
-    //Send { address: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -43,10 +41,8 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     GetEntry { entry_address: String },
     GetState {},
-    //Balance { address: String },
 }
 
-// We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct EntryResponse {
     pub claimable_reward: Uint128,
@@ -75,4 +71,3 @@ pub struct StateResponse {
     pub tier3rate: f64,
     pub tier3time: u64,
 }
-
