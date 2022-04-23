@@ -69,9 +69,9 @@ pub enum Cw20HookMsg {
     RedeemStable {},
 }
 
-pub fn deposit_stable_msg(deps: Deps, market: &Addr, denom: &str, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
+pub fn deposit_stable_msg(deps: Deps, market: String, denom: &str, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
     Ok(vec![CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: deps.api.addr_validate(&market.to_string()).unwrap().to_string(),
+        contract_addr: deps.api.addr_validate(&market).unwrap().to_string(),
         msg: to_binary(&HandleMsg::DepositStable {})?,
         funds: vec![deduct_tax(
             deps,
@@ -83,11 +83,11 @@ pub fn deposit_stable_msg(deps: Deps, market: &Addr, denom: &str, amount: Uint12
     })])
 }
 
-pub fn redeem_stable_msg(deps: Deps, market: &Addr, token: &Addr, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
+pub fn redeem_stable_msg(deps: Deps, market: String, token: String, amount: Uint128,) -> StdResult<Vec<CosmosMsg>> {
     Ok(vec![CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: deps.api.addr_validate(&token.to_string()).unwrap().to_string(),
+        contract_addr: deps.api.addr_validate(&token).unwrap().to_string(),
         msg: to_binary(&Cw20ExecuteMsg::Send {
-            contract: deps.api.addr_validate(&market.to_string()).unwrap().to_string(),
+            contract: deps.api.addr_validate(&market).unwrap().to_string(),
             amount,
             msg: to_binary(&Cw20HookMsg::RedeemStable {}).unwrap(),
         })?,

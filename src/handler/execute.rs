@@ -192,7 +192,7 @@ pub fn try_set_anc_market(deps: DepsMut, info: MessageInfo, address: Addr) -> Re
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
     } else {
-        state.anc_market = address;
+        state.anc_market = address.to_string();
         STATE.save(deps.storage, &state)?;
     }
     Ok(Response::new().add_attribute("method", "try_set_tier_data"))
@@ -249,7 +249,7 @@ fn make_deposit_and_convert_to_aust(deps: Deps, env: Env, amount: Uint128) -> Re
     }))];
 
     // swap ust for aust
-    anchor::deposit_stable_msg(deps, &state.anc_market, "uust", amount)?;
+    anchor::deposit_stable_msg(deps, state.anc_market, "uust", amount)?;
     Ok(Response::new().add_attribute("method", "make_deposit_and_convert_to_aust"))
 }
 
@@ -291,7 +291,7 @@ fn some_withdraw_helper(mut entry: Entry, time: u64, mut amount: Uint128) -> Res
 fn convert_from_aust_and_make_withdraw(deps: Deps, info: MessageInfo, amount: Uint128) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     // swap from aust to ust
-    anchor::redeem_stable_msg(deps, &state.anc_market, &state.aust_contract, amount)?;
+    anchor::redeem_stable_msg(deps, state.anc_market, state.aust_contract, amount)?;
     // transfer funds from contract to users wallet
     let mut response: Response = Default::default();
     let coin_amount = coins(amount.u128(), "uust");

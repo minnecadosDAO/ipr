@@ -1,1 +1,1 @@
-3fb7ec9f93671c2565801282b82442f316115aa41acac0651bc67d8c77a753ff  ./target/wasm32-unknown-unknown/release/ipr.wasm
+5bd55f389d4d9440de915a58106a07d87417004adfcae44a51e3cbc2baace7fc  ./target/wasm32-unknown-unknown/release/ipr.wasm
