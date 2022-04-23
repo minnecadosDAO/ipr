@@ -1,4 +1,4 @@
-use cosmwasm_std::{DepsMut, Response, MessageInfo, StdResult, Uint128, Env, SubMsg, BankMsg, coins, CanonicalAddr, to_binary, CosmosMsg, WasmMsg, Deps};
+use cosmwasm_std::{DepsMut, Response, MessageInfo, StdResult, Uint128, Env, SubMsg, BankMsg, coins, to_binary, Addr, CosmosMsg, WasmMsg, Deps};
 use crate::{ContractError, state::{ENTRIES, STATE, Entry}};
 use crate::handler::anchor;
 use cw20::Cw20ExecuteMsg;
@@ -162,7 +162,7 @@ pub fn try_set_reward_contract(deps: DepsMut, info: MessageInfo, address: String
     Ok(Response::new().add_attribute("method", "try_set_reward_contract"))
 }
 
-pub fn try_set_tier_data(deps: DepsMut, info: MessageInfo, data: (u8, f64, u64)) -> Result<Response, ContractError> {
+pub fn try_set_tier_data(deps: DepsMut, info: MessageInfo, data: (u8, u64, u64)) -> Result<Response, ContractError> {
     let mut state = STATE.load(deps.storage)?;
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
@@ -187,7 +187,7 @@ pub fn try_set_tier_data(deps: DepsMut, info: MessageInfo, data: (u8, f64, u64))
     Ok(Response::new().add_attribute("method", "try_set_tier_data"))
 }
 
-pub fn try_set_anc_market(deps: DepsMut, info: MessageInfo, address: CanonicalAddr) -> Result<Response, ContractError> {
+pub fn try_set_anc_market(deps: DepsMut, info: MessageInfo, address: Addr) -> Result<Response, ContractError> {
     let mut state = STATE.load(deps.storage)?;
     if info.sender != state.owner {
         return Err(ContractError::Unauthorized {});
@@ -228,7 +228,7 @@ fn none_deposit_helper(amount: Uint128, time: u64) -> StdResult<Entry> {
     let entry = Entry {
         claimable_reward: Uint128::zero(), 
         ust_deposited: amount, 
-        averaged_reward_rate: 0.0,
+        averaged_reward_rate: 0,
         ust_deposit_log: vec![deposit], 
         ust_withdraw_log: vec![], 
         dynamic_reward_log: vec![reward] 
